@@ -118,34 +118,17 @@ def modal_aviso_link(qid, links_encontrados):
 import streamlit as st
 import psycopg2
 import json
+from datetime import datetime
+
 
 def get_connection():
     return psycopg2.connect(
         st.secrets["DATABASE_URL"]
     )
 
-def init_db():
-    with get_connection() as conn:
-        cursor = conn.cursor()
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS respostas (
-                id TEXT NOT NULL,
-                ano INTEGER NOT NULL,
-                valor TEXT,
-                pontos REAL DEFAULT 0,
-                link TEXT,
-                comentarios TEXT,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY (id, ano)
-            )
-        """)
-
-        conn.commit()
-
-def load_respostas(ano):
-    dados_ano = {}
+def load_respostas():
+    dados = {}
 
     try:
         with get_connection() as conn:
@@ -153,14 +136,19 @@ def load_respostas(ano):
 
             cursor.execute(
                 """
-                SELECT id, valor, pontos, link, comentarios
+                SELECT 
+                    id,
+                    pergunta_id,
+                    resposta,
+                    pontuacao_obtida,
+                    comentarios,
+                    respondido_em
                 FROM respostas
-                WHERE ano = %s
-                """,
-                (ano,)
+                """
             )
 
             for row in cursor.fetchall():
+
                 comentarios_lista = []
 
                 if row[4]:
@@ -169,55 +157,59 @@ def load_respostas(ano):
                     except:
                         comentarios_lista = []
 
-                dados_ano[row[0]] = {
-                    "valor": row[1],
-                    "pontos": row[2],
-                    "link": row[3],
-                    "comentarios": comentarios_lista
+                dados[str(row[1])] = {
+                    "id": row[0],
+                    "valor": row[2],
+                    "pontos": row[3],
+                    "comentarios": comentarios_lista,
+                    "respondido_em": row[5]
                 }
 
     except Exception as e:
         st.error(f"Erro ao carregar respostas: {e}")
 
-    return dados_ano
+    return dados
 
-def save_resp(qid, valor, pontos, link, comentarios=None):
-    ano_sel = st.session_state.get("ano_referencia_global")
 
-    if not ano_sel:
+
+def save_resp(pergunta_id, valor, pontos, comentarios=None):
+
+    usuario_id = st.session_state.get("usuario_id")
+
+    if not usuario_id:
+        st.error("Usuário não identificado.")
         return
+
 
     comentarios_json = None
 
     if comentarios is not None:
-        comentarios_json = json.dumps(comentarios, ensure_ascii=False)
-    else:
-        dados_atuais = load_respostas(ano_sel)
+        comentarios_json = json.dumps(
+            comentarios,
+            ensure_ascii=False
+        )
 
-        if qid in dados_atuais:
-            comentarios_json = json.dumps(
-                dados_atuais[qid].get("comentarios", []),
-                ensure_ascii=False
-            )
 
     try:
         with get_connection() as conn:
+
             cursor = conn.cursor()
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO respostas
                 (
                     id,
-                    ano,
-                    valor,
-                    pontos,
-                    link,
+                    usuario_id,
+                    pergunta_id,
+                    resposta,
+                    pontuacao_obtida,
                     comentarios,
-                    atualizado_em
+                    respondido_em
                 )
                 VALUES
                 (
-                    %s,
+                    gen_random_uuid(),
                     %s,
                     %s,
                     %s,
@@ -225,28 +217,21 @@ def save_resp(qid, valor, pontos, link, comentarios=None):
                     %s,
                     CURRENT_TIMESTAMP
                 )
-
-                ON CONFLICT (id, ano)
-                DO UPDATE SET
-                    valor = EXCLUDED.valor,
-                    pontos = EXCLUDED.pontos,
-                    link = EXCLUDED.link,
-                    comentarios = EXCLUDED.comentarios,
-                    atualizado_em = CURRENT_TIMESTAMP
-            """,
-            (
-                qid,
-                ano_sel,
-                str(valor),
-                float(pontos),
-                str(link),
-                comentarios_json
-            ))
+                """,
+                (
+                    usuario_id,
+                    pergunta_id,
+                    str(valor),
+                    float(pontos),
+                    comentarios_json
+                )
+            )
 
             conn.commit()
 
+
     except Exception as e:
-        st.error(f"Erro ao salvar {qid}: {e}")
+        st.error(f"Erro ao salvar resposta: {e}")
 
 # --- BLOCO DE COMENTÁRIOS COM LIMPEZA, STATUS INDEPENDENTE E EXCLUSÃO ---
 def bloco_comentarios(questao_id, res_data, ano_sel=None):
