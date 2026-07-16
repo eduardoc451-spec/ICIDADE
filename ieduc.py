@@ -140,33 +140,44 @@ def init_db():
         # Adiciona a coluna de comentários dinamicamente caso ela não exista na tabela legado
         try:
             cursor.execute("ALTER TABLE respostas ADD COLUMN comentarios TEXT")
-        except sqlite3.OperationalError:
-            pass
-        conn.commit()
+except Exception:
+    pass
 
 def load_respostas(ano):
     dados_ano = {}
+
     try:
         with get_connection() as conn:
-            cursor = conn.execute(
-                "SELECT id, valor, pontos, link, comentarios FROM respostas WHERE ano = ?", (ano,)
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT id, valor, pontos, link, comentarios
+                FROM respostas
+                WHERE ano = %s
+                """,
+                (ano,)
             )
+
             for row in cursor.fetchall():
                 comentarios_lista = []
+
                 if row[4]:
                     try:
                         comentarios_lista = json.loads(row[4])
                     except:
                         comentarios_lista = []
-                        
+
                 dados_ano[row[0]] = {
-                    "valor": row[1], 
-                    "pontos": row[2], 
+                    "valor": row[1],
+                    "pontos": row[2],
                     "link": row[3],
                     "comentarios": comentarios_lista
                 }
+
     except Exception:
         pass
+
     return dados_ano
 
 def save_resp(qid, valor, pontos, link, comentarios=None):
