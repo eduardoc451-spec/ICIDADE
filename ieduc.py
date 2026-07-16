@@ -6,22 +6,39 @@ from io import BytesIO
 from datetime import datetime, date
 
 # =============================================================================
+# FUNÇÕES DO BANCO NEON
+# =============================================================================
+
+from banco import load_respostas, save_resp
+
+
+# =============================================================================
 # BIBLIOTECAS PARA O PDF (ReportLab)
 # =============================================================================
+
 from reportlab.lib.pagesizes import A4
 from reportlab.graphics.shapes import Drawing, String
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, PageBreak
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    Image,
+    PageBreak
+)
+
 
 # =============================================================================
 # BIBLIOTECAS PARA OS GRÁFICOS (Plotly)
 # =============================================================================
+
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
-
 # =============================================================================
 # CONSTANTES GLOBAIS i-EDUC (ADAPTADAS DO MODELO IGOV TI)
 # =============================================================================
