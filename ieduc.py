@@ -117,14 +117,17 @@ def modal_aviso_link(qid, links_encontrados):
 
 import streamlit as st
 import psycopg2
+import json
 
 def get_connection():
     return psycopg2.connect(
         st.secrets["DATABASE_URL"]
     )
+
 def init_db():
     with get_connection() as conn:
         cursor = conn.cursor()
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS respostas (
                 id TEXT NOT NULL,
@@ -132,16 +135,14 @@ def init_db():
                 valor TEXT,
                 pontos REAL DEFAULT 0,
                 link TEXT,
+                comentarios TEXT,
                 criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id, ano)
             )
         """)
-        # Adiciona a coluna de comentários dinamicamente caso ela não exista na tabela legado
-        try:
-            cursor.execute("ALTER TABLE respostas ADD COLUMN comentarios TEXT")
-except Exception:
-    pass
+
+        conn.commit()
 
 def load_respostas(ano):
     dados_ano = {}
@@ -175,32 +176,75 @@ def load_respostas(ano):
                     "comentarios": comentarios_lista
                 }
 
-    except Exception:
-        pass
+    except Exception as e:
+        st.error(f"Erro ao carregar respostas: {e}")
 
     return dados_ano
 
 def save_resp(qid, valor, pontos, link, comentarios=None):
     ano_sel = st.session_state.get("ano_referencia_global")
+
     if not ano_sel:
         return
-    
+
     comentarios_json = None
+
     if comentarios is not None:
         comentarios_json = json.dumps(comentarios, ensure_ascii=False)
     else:
-        # Mantém os comentários antigos intactos caso esteja atualizando apenas campos de valores do form principal
         dados_atuais = load_respostas(ano_sel)
+
         if qid in dados_atuais:
-            comentarios_json = json.dumps(dados_atuais[qid].get("comentarios", []), ensure_ascii=False)
+            comentarios_json = json.dumps(
+                dados_atuais[qid].get("comentarios", []),
+                ensure_ascii=False
+            )
 
     try:
         with get_connection() as conn:
-            conn.execute("""
-                INSERT OR REPLACE INTO respostas (id, ano, valor, pontos, link, comentarios, atualizado_em) 
-                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            """, (qid, ano_sel, str(valor), float(pontos), str(link), comentarios_json))
+            cursor = conn.cursor()
+
+            cursor.execute("""
+                INSERT INTO respostas
+                (
+                    id,
+                    ano,
+                    valor,
+                    pontos,
+                    link,
+                    comentarios,
+                    atualizado_em
+                )
+                VALUES
+                (
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    CURRENT_TIMESTAMP
+                )
+
+                ON CONFLICT (id, ano)
+                DO UPDATE SET
+                    valor = EXCLUDED.valor,
+                    pontos = EXCLUDED.pontos,
+                    link = EXCLUDED.link,
+                    comentarios = EXCLUDED.comentarios,
+                    atualizado_em = CURRENT_TIMESTAMP
+            """,
+            (
+                qid,
+                ano_sel,
+                str(valor),
+                float(pontos),
+                str(link),
+                comentarios_json
+            ))
+
             conn.commit()
+
     except Exception as e:
         st.error(f"Erro ao salvar {qid}: {e}")
 
