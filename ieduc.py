@@ -128,23 +128,6 @@ def modal_aviso_link(qid, links_encontrados):
     if st.button("Confirmo que o link está liberado para o público", key=f"btn_conf_{qid}"):
         st.rerun()
 
-# =============================================================================
-# 1. FUNÇÕES DE APOIO E BANCO DE DADOS
-# =============================================================================
-
-import streamlit as st
-import psycopg2
-import json
-import re
-from datetime import datetime
-
-
-def get_connection():
-    return psycopg2.connect(
-        st.secrets["DATABASE_URL"]
-    )
-
-
 # ============================================================
 # CARREGAR RESPOSTAS
 # ============================================================
