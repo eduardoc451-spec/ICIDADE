@@ -120,7 +120,7 @@ def modal_aviso_link(qid, links_encontrados):
         st.markdown(f"🔗 **Endereço:** `{lk}`")
     st.markdown("""
     **Por favor, verifique se este link está configurado para acesso público/compartilhado.**
-    
+     
     Se as credenciais estiverem privadas ou exigirem login e senha do seu município, as equipes avaliadoras externas **não conseguirão acessar as provas**, invalidando os pontos desse quesito.
     """)
     if st.button("Confirmo que o link está liberado para o público", key=f"btn_conf_{qid}"):
@@ -133,7 +133,7 @@ def modal_aviso_link(qid, links_encontrados):
 def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
     # Inicializa o buffer na memória e vincula ao SimpleDocTemplate
     buffer = BytesIO()
-    
+     
     doc = SimpleDocTemplate(
         buffer, 
         pagesize=A4, 
@@ -151,13 +151,13 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
     # FOLHA 1: CAPA
     # -------------------------------------------------------------------------
     elements.append(Spacer(1, 100))
-    
+     
     elements.append(Paragraph("RELATÓRIO I-EDUC", styles["Title"]))
-        
+         
     elements.append(Spacer(1, 50))
     elements.append(Paragraph("Relatório i-Educ (Validação Municipal)", style_titulo_capa))
     elements.append(Spacer(1, 15))
-    
+     
     style_ano_capa = ParagraphStyle('AnoCapa', parent=styles['Normal'], fontName='Helvetica', fontSize=16, textColor=colors.HexColor("#7f8c8d"), alignment=1)
     elements.append(Paragraph(f"Exercício: {ano}", style_ano_capa))
     elements.append(PageBreak())
@@ -178,7 +178,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         [Paragraph("4. Alinhamento com a Agenda 2030 (ODS)", style_item_esquerda), Paragraph("Pág. 4", style_pag_direita)],
         [Paragraph("5. Série Histórica do Desempenho i-EDUC", style_item_esquerda), Paragraph("Pág. 5", style_pag_direita)],
     ]
-    
+     
     tabela_sumario = Table(dados_sumario, colWidths=[400, 90])
     tabela_sumario.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -216,7 +216,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
 
     dados_ano_anterior = all_data.get(ano_ant, {})
     nota_anterior = 0.0
-    
+     
     # Varredura blindada: aceita tanto dicionários estruturados quanto valores diretos
     if dados_ano_anterior and isinstance(dados_ano_anterior, dict):
         if "total" in dados_ano_anterior:
@@ -308,9 +308,9 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         pts_obtidos = float(info.get("pontos", 0))
         valor_resposta = info.get("valor", "")
         link_evidencia = info.get("link", "")
-        
+         
         pts_maximo = float(PONTUACOES_MAX.get(qid, 0)) if 'PONTUACOES_MAX' in globals() else 10.0
-        
+         
         if pts_maximo > 0:
             eficiencia = (pts_obtidos / pts_maximo) * 100
             item_data = {
@@ -321,7 +321,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
                 "valor": valor_resposta, 
                 "link": link_evidencia
             }
-            
+             
             # NOVA REGRA: >= 70% é Ponto Forte, < 70% é Oportunidade de Melhoria
             if eficiencia >= 70.0: 
                 lista_pontos_fortes.append(item_data)
@@ -365,8 +365,8 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         elements.append(Spacer(1, 15))
 
     # =========================================================================
-# 3. ANÁLISE DE IMPACTO E PENALIDADES (EFICIÊNCIA PREVENTIVA)
-# =========================================================================
+    # 3. ANÁLISE DE IMPACTO E PENALIDADES (EFICIÊNCIA PREVENTIVA)
+    # =========================================================================
     elements.append(Paragraph("<b>3. ANÁLISE DE IMPACTO E PENALIDADES (EFICIÊNCIA PREVENTIVA)</b>", styles["h2"]))
     elements.append(Spacer(1, 6))
 
@@ -382,11 +382,11 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
     }
 
     lista_penalidades = []
-    
+     
     # Fazemos apenas LEITURA direta no dicionário original, sem clonar ou modificar chaves
     for qid, pen_max in PENALIDADES_MAX.items():
         info = dados.get(qid, None)
-        
+         
         # Se o quesito existe no banco, extrai a nota real de forma segura
         if info is not None:
             if isinstance(info, dict):
@@ -396,15 +396,15 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         else:
             # Caso não esteja preenchido no banco, assumimos 0.0 estritamente para o relatório
             nota_real = 0.0
-        
+         
         # Computa o risco: se for negativo, registra. Se for positivo ou zero, risco é zero.
         nota_risco = nota_real if nota_real <= 0.0 else 0.0
-        
+         
         if pen_max != 0:
             eficiencia_preventiva = (1.0 - (nota_risco / pen_max)) * 100.0
         else:
             eficiencia_preventiva = 100.0
-            
+             
         eficiencia_preventiva = max(0.0, min(eficiencia_preventiva, 100.0))
 
         lista_penalidades.append({
@@ -425,7 +425,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
             Paragraph("Eficiência Preventiva", style_th), 
             Paragraph("Status de Risco", style_th)
         ]]
-        
+         
         # Algoritmo de ordenação alfanumérico inteligente protegido contra tipos
         def ordenar_quesitos(x):
             limpo = ''.join(c for c in str(x["qid"]).split('_')[0] if c.isdigit() or c == '.')
@@ -437,14 +437,14 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
             nota_txt = f"{item['nota_real']:.1f} pts"
             teto_txt = f"{item['pen_max']:.1f} pts"
             ef_txt = f"{item['eficiencia']:.1f}%"
-            
+             
             if item['eficiencia'] >= 100.0: 
                 status = "<font color='#2e7d32'><b>Risco Mitigado</b></font>"
             elif item['eficiencia'] <= 0.0: 
                 status = "<font color='#c0392b'><b>Impacto Máximo</b></font>"
             else: 
                 status = "<font color='#d35400'><b>Impacto Parcial</b></font>"
-                
+                 
             data_penalidades.append([
                 Paragraph(item['qid'], style_tabela_centro), 
                 Paragraph(nota_txt, style_tabela_centro), 
@@ -452,7 +452,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
                 Paragraph(ef_txt, style_tabela_centro), 
                 Paragraph(status, style_tabela_padrao)
             ])
-            
+             
         tabela_pen = Table(data_penalidades, colWidths=[70, 110, 80, 115, 125])
         tabela_pen.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1b4f72")), 
@@ -468,7 +468,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
     # -------------------------------------------------------------------------
     elements.append(Paragraph("<b>4. ALINHAMENTO COM A AGENDA 2030 (METAS ODS / ONU)</b>", styles["h2"]))
     elements.append(Spacer(1, 6))
-    
+     
     def calcular_percentual_checklist(resposta_bruta, total_itens):
         if not resposta_bruta: return 0.0
         itens = [i.strip().lower() for i in str(resposta_bruta).split(",") if i.strip()]
@@ -483,7 +483,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         resp_l = resp.lower()
         metas = ""
         status = ""
-        
+         
         # --- BLOCO EIXO 1 (Mapeamento ODS 4.2 e variações) ---
         if qid in ["1.0", "1.1", "1.2", "1.2.1", "1.2.2", "1.7", "1.11", "1.12", "1.13"]:
             metas = "4.2"
@@ -500,7 +500,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
         elif qid == "1.10.1":
             metas = "4.2"
             status = "Atendido" if any(x in resp_l for x in ["mensal", "bimestral", "trimestral", "quadrimestral", "semestral", "anual"]) else "Não Atendido"
-            
+             
         # --- BLOCO EIXO 2 (Mapeamento ODS 4.2 e variações) ---
         elif qid in ["2.0", "2.1", "2.2", "2.2.1", "2.2.2", "2.7", "2.11", "2.12", "2.13"]:
             metas = "4.2"
@@ -631,253 +631,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
             status = "Atendido" if "sim" in resp_l else "Não Atendido"
         elif qid == "18.1":
             metas = "2.1, 4.0, 16.6"
-            status = f"{calcular_percentual_checklist(resp, 5):.1f}% Atendido"
-        elif qid == "18.3.1":
-            metas = "4.0, 16.6"
-            status = f"{calcular_percentual_checklist(resp, 9):.1f}% Atendido"
-        elif qid == "19.1":
-            metas = "4.0"
-            status = f"{calcular_percentual_checklist(resp, 4):.1f}% Atendido"
-        elif qid == "19.3":
-            metas = "4.0"
-            status = "Atendido" if "em todas as escolas" in resp_l else "Não Atendido"
-
-        if metas: 
-            analise_ods.append({"qid": qid, "status": status, "metas": metas, "resp": resp[:50]})
-
-    if analise_ods:
-        data_ods = [["Quesito", "Resposta Informada", "Vínculo Metas ODS", "Status de Cumprimento"]]
-        style_td_ods = ParagraphStyle('TdOds', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9, alignment=1)
-        
-        def extrair_chave_hierarquica(x):
-            return [float(i) if i.replace('.', '', 1).isdigit() else 999 for i in x['qid'].split('.')]
-            
-        for item in sorted(analise_ods, key=extrair_chave_hierarquica):
-            st_txt = item["status"]
-            if "Não Atendido" in st_txt: 
-                st_p = Paragraph(f"<font color='#dc3545'><b>{st_txt}</b></font>", style_td_ods)
-            elif "Atendido" in st_txt and "%" not in st_txt: 
-                st_p = Paragraph(f"<font color='#28a745'><b>{st_txt}</b></font>", style_td_ods)
-            else: 
-                st_p = Paragraph(f"<font color='#007bff'><b>{st_txt}</b></font>", style_td_ods)
-                
-            data_ods.append([item["qid"], Paragraph(item["resp"], styles["Normal"]), item["metas"], st_p])
-            
-        tabela_ods = Table(data_ods, colWidths=[60, 200, 115, 110])
-        tabela_ods.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f9d58")), 
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke), 
-            ("ALIGN", (0, 0), (0, -1), "CENTER"), 
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#0f9d58")), 
-            ("VALIGN", (0, 0), (-1, -1), "MIDDLE")
-        ]))
-        elements.append(tabela_ods)
-        elements.append(Spacer(1, 15))
-
-    # -------------------------------------------------------------------------
-    # 📊 5. SÉRIE HISTÓRICA DO I-EDUC (CONSOLIDADO FINAL)
-    # -------------------------------------------------------------------------
-    elements.append(Spacer(1, 10))
-
-    anos_serie = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
-    valores_serie = []
-    
-    for a in anos_serie:
-        if a == ano_atual: 
-            # Trava de segurança: garante o uso do parâmetro total oficial repassado
-            valores_serie.append(float(total))
-        elif a in all_data:
-            dados_ano = all_data[a]
-            # Coleta de forma estritamente informativa sem forçar recálculos do ano atual
-            if isinstance(dados_ano, dict) and "total" in dados_ano:
-                valores_serie.append(float(dados_ano["total"]))
-            elif isinstance(dados_ano, (int, float)):
-                valores_serie.append(float(dados_ano))
-            else:
-                valores_serie.append(float(sum(info_h.get("pontos", 0) for qid_h, info_h in dados_ano.items() if isinstance(info_h, dict) and not qid_h.startswith("COM_"))))
-        else: 
-            valores_serie.append(0.0)
-
-    # Configuração do Gráfico ReportLab
-    desenho_grafico = Drawing(480, 165)
-    bc = VerticalBarChart()
-    bc.x = 45; bc.y = 25; bc.height = 110; bc.width = 410
-    bc.data = [valores_serie]
-    bc.categoryAxis.categoryNames = [str(a) for a in anos_serie]
-    bc.categoryAxis.labels.fontSize = 9; bc.categoryAxis.labels.fontName = 'Helvetica-Bold'; bc.categoryAxis.labels.dy = -10
-    
-    # Voltando para o teto oficial de 1000 pontos do sistema
-    bc.valueAxis.valueMin = 0; bc.valueAxis.valueMax = 1000; bc.valueAxis.valueStep = 200; bc.valueAxis.labels.fontSize = 8
-    
-    # ATIVAÇÃO DOS RÓTULOS (PONTUAÇÃO EM CIMA DA BARRA)
-    bc.barLabels.nudge = 8
-    bc.barLabels.fontSize = 8
-    bc.barLabels.fontName = 'Helvetica-Bold'
-    bc.barLabelFormat = '%.1f'  # Formato com uma casa decimal
-    
-    # Paleta de cores institucional i-EDUC
-    bc.bars[0].fillColor = colors.HexColor("#0f9d58")  # Verde ODS/i-EDUC
-    bc.bars[0].strokeColor = colors.HexColor("#27ae60")
-    bc.bars[0].strokeWidth = 0.5
-
-    # Título do Gráfico atualizado para o contexto educacional
-    desenho_grafico.add(String(240, 150, "Série Histórica do i-EDUC", textAnchor='middle', fontName='Helvetica-Bold', fontSize=12, fillColor=colors.HexColor("#2c3e50")))
-    desenho_grafico.add(bc)
-    
-    elements.append(desenho_grafico)
-
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
-
-# =============================================================================
-# 3. INTERFACE E ABAS
-# =============================================================================
-from banco import get_connection  # Certificando-se de que a conexão unificada com o banco está importada
-
-def render_sidebar():
-    st.sidebar.title("🎓 Painel i-EDUC")
-    anos = [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030]
-    ano_sel = st.sidebar.selectbox("Ano de Referência:", anos, key="ano_referencia_global")
-    
-    if st.session_state.get("limpeza_ativa", False):
-        res_data = {}
-    else:
-        res_data = load_respostas(ano_sel)
-        
-    total_pts = sum(float(item.get("pontos", 0)) for k, item in res_data.items() if not k.startswith("COM_"))
-    total_pts = round(total_pts, 1)
-    
-    if total_pts <= 500: 
-        faixa, cor = "C", "red"
-    elif total_pts <= 599: 
-        faixa, cor = "C+", "orange"
-    elif total_pts <= 749: 
-        faixa, cor = "B", "#d4d400"
-    elif total_pts <= 899: 
-        faixa, cor = "B+", "lightgreen"
-    else: 
-        faixa, cor = "A", "green"
-        
-    st.sidebar.metric("Pontuação Total", f"{total_pts:.1f} pts")
-    st.sidebar.markdown(f"**Faixa:** <span style='color:{cor}; font-size:20px; font-weight:bold;'>{faixa}</span>", unsafe_allow_html=True)
-    
-    # 📄 SEÇÃO DE GERAR E BAIXAR RELATÓRIO PDF INTEGRADA
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📄 Relatórios")
-    
-    # 🔥 BUSCA HISTÓRICA BLINDADA DIRETO NO BANCO NEON (POSTGRESQL)
-    historico_tratado = {}
-    try:
-        with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT ano, id, pontos FROM respostas")
-                for row in cursor.fetchall():
-                    try:
-                        ano_db = int(str(row[0]).strip()[:4])
-                        qid = row[1]
-                        pontos_item = float(row[2]) if row[2] is not None else 0.0
-                        
-                        if ano_db not in historico_tratado:
-                            historico_tratado[ano_db] = {}
-                        
-                        historico_tratado[ano_db][qid] = {"pontos": pontos_item}
-                    except:
-                        continue
-    except Exception as e:
-        st.sidebar.error(f"Erro ao processar histórico: {e}")
-
-    st.session_state.all_data = historico_tratado
-
-    pdf_buffer = gerar_relatorio_pdf(res_data, ano_sel, total_pts, faixa, historico_tratado)
-    
-    st.sidebar.download_button(
-        label="📥 Baixar Relatório PDF",
-        data=pdf_buffer.getvalue(),
-        file_name=f"Relatorio_i-Educ_{ano_sel}.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
-    
-    # Botão da Sidebar protegido com a Lógica Inversa
-    st.sidebar.markdown("---")
-    if st.sidebar.button("🔄 Zerar Banco de Dados"):
-        try:
-            with get_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute("DELETE FROM respostas WHERE ano = %s", (ano_sel,))
-                conn.commit()
-            
-            for chave in list(st.session_state.keys()):
-                if chave.startswith(("q", "res", "com", "val", "data")): 
-                    st.session_state.pop(chave, None)
-            
-            st.session_state["limpeza_ativa"] = True
-            st.rerun()
-        except Exception as e:
-            st.sidebar.error(f"Erro ao zerar o banco de dados: {e}")
-        
-    return ano_sel, res_data, total_pts, faixa, cor
-
-
-def mostrar_formulario_educ():
-    # Removido init_db() local redundante (inicialização centralizada no arquivo principal de entrada ou banco.py)
-    
-    if "limpeza_ativa" in st.session_state:
-        st.session_state.pop("limpeza_ativa", None)
-        
-    ano_sel, res_data, total_pts, faixa, cor = render_sidebar()
-    st.markdown("""<style>.quesito-card { background-color: #f9f9f9; padding: 20px; border-left: 6px solid #1e88e5; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e3f2fd; }</style>""", unsafe_allow_html=True)
-    
-    st.title(f"📚 Auditoria i-EDUC - {ano_sel}")
-    
-    # 🔴 BOTÃO DE LIMPAR EM BRANCO NA TELA (MÉTODO BLINDADO MANTIDO COM SINTAXE POSTGRESQL)
-    col_btn, _ = st.columns([1, 3])
-    with col_btn:
-        if st.button("🗑️ Limpar Todos os Campos", type="primary", use_container_width=True):
-            try:
-                with get_connection() as conn:
-                    with conn.cursor() as cursor:
-                        cursor.execute("DELETE FROM respostas WHERE ano = %s", (ano_sel,))
-                    conn.commit()
-                
-                # 🔥 Limpa estritamente as chaves de dados das perguntas do questionário
-                for chave in list(st.session_state.keys()):
-                    if chave.startswith(("q", "res", "com", "val", "data")):
-                        st.session_state.pop(chave, None)
-                
-                st.session_state["limpeza_ativa"] = True
-                st.rerun()
-            except Exception as e:
-                st.error(f"Erro ao limpar dados do formulário: {e}")
-    
-    abas = st.tabs(["📝 Questionário", "📊 Dados Externos", "📈 Gráficos"])
-    aba_questionario, aba_dados_externos, aba_graf = abas
-    
-    opc_sim_nao = ["", "Sim", "Não"]
-    
-    with aba_questionario:
-        st.header("1.0 Diretrizes e Avaliação de Creches")
-        import re
-import streamlit as st
-
-# Certifique-se de ter importado 're' e definido suas funções globais:
-# save_resp, modal_aviso_link, bloco_comentarios e res_data
-
-# =============================================================================
-# DENOMINADOR INDEPENDENTE (CENTRALIZADOR)
-# =============================================================================
-st.number_input(
-    "Informe o número TOTAL de creches municipais do município:", 
-    min_value=0, 
-    step=1, 
-    value=st.session_state.get("global_total_creches_ie", 0),
-    key="global_total_creches_ie"
-)
-
-# Recupera o total global para usar como sugestão/padrão nos quesitos abaixo
-v_total_global = st.session_state.get("global_total_creches_ie", 0)
-
+            status = f"{calcular_percentual_checklist(resp, 10):.1f}% Atendido" # <-- Exemplo de fechamento para a linha cortada
 
 
 
