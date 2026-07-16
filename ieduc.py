@@ -467,13 +467,7 @@ def gerar_relatorio_pdf(dados, ano, total, faixa, all_data=None):
     # -------------------------------------------------------------------------
     elements.append(Spacer(1, 100))
     
-    try:
-        # Tenta carregar a logo do sistema de validação municipal do i-Educ
-        logo = Image("iegm.png", width=380, height=180)
-        logo.hAlign = 'CENTER'
-        elements.append(logo)
-    except Exception:
-        elements.append(Paragraph("[Logo: iegm.png]", styles["Title"]))
+    elements.append(Paragraph("RELATÓRIO I-EDUC", styles["Title"]))
         
     elements.append(Spacer(1, 50))
     elements.append(Paragraph("Relatório i-Educ (Validação Municipal)", style_titulo_capa))
