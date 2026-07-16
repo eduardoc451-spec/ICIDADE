@@ -878,55 +878,6 @@ st.number_input(
 # Recupera o total global para usar como sugestão/padrão nos quesitos abaixo
 v_total_global = st.session_state.get("global_total_creches_ie", 0)
 
-# =============================================================================
-# QUESTÃO 1.0 - OFERTA DE CRECHE (IEDUC)
-# =============================================================================
-st.markdown('<div class="quesito-card">', unsafe_allow_html=True)
-
-with st.container(key=f"container_bloco_ieduc_1_0_{ano_sel}", border=False):
-    with st.expander(f"📌 Questão 1.0 • Oferta de Creche ({ano_sel})", expanded=True):
-        st.subheader("1.0 • Infraestrutura da Educação Infantil")
-        st.write("**1.0 A Prefeitura municipal oferece Creche?**")
-        st.caption("ℹ️ *O salvamento é automático. Qualquer alteração grava os dados na hora.*")
-        
-        opcoes10 = ["Selecione...", "Sim", "Não"]
-        d10 = res_data.get("1.0", {"valor": "Selecione...", "points": 0.0, "link": ""})
-        val_salvo_10 = d10.get("valor", "Selecione...")
-        if val_salvo_10 not in opcoes10:
-            val_salvo_10 = "Selecione..."
-                
-        idx10 = opcoes10.index(val_salvo_10)
-        
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            r10 = st.radio("Selecione 1.0:", options=opcoes10, index=idx10, key=f"rb_ieduc_10_{ano_sel}", label_visibility="collapsed")
-            pts_10 = 0.0
-            
-        with col2:
-            l10 = st.text_area("Link/Evidência (1.0):", value=d10.get("link", ""), key=f"txt_ieduc_10_{ano_sel}", height=110)
-            links_f10 = re.findall(r'(https?://[^\s]+)', l10)
-            if links_f10:
-                botoes_10 = " | ".join([f"🔗 [{lk}]({lk})" for lk in links_f10])
-                st.markdown(f"**Links Ativos:** {botoes_10}")
-                
-        score_placeholder_10 = st.empty()
-        if r10 == "Selecione...":
-            score_placeholder_10.markdown("⚠️ **Status:** `Aguardando preenchimento` (Selecione uma opção válida)")
-        else:
-            score_placeholder_10.markdown(f"📊 **Pontuação Aplicada na Questão 1.0:** `{pts_10:.1f} pontos` (Dados Informativos)")
-                
-        # Persistência reativa sem forçar rerun desnecessário
-        if r10 != d10.get("valor", "") or l10 != d10.get("link", ""):
-            save_resp("1.0", r10, pts_10, l10)
-            res_data["1.0"] = {"valor": r10, "pontos": pts_10, "link": l10}
-            if l10 != d10.get("link", "") and links_f10:
-                links_10_antigos = re.findall(r'(https?://[^\s]+)', d10.get("link", ""))
-                if links_f10 != links_10_antigos:
-                    modal_aviso_link("1.0", links_f10)
-            st.rerun()
-                
-        bloco_comentarios("1.0", res_data, ano_sel)
-st.markdown('</div>', unsafe_allow_html=True)
 
 
 
